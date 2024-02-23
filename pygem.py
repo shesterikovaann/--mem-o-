@@ -76,18 +76,6 @@ def load_image(name):
 all_sprites = pygame.sprite.Group()
 
 # Создание списка карточек
-images = ["arthur_fish.png", "igla.png", "igla.png", "konok.png", "konok.png", "money.png", "ne_pila.png",
-          "ne_pila.png", "pila.png", "pila.png", "rock.png", "sguch.png", "sguch.png",
-          "smuch.png", "smuch.png", "sword.png"]
-
-shuffle(images)
-x_l, y_l = 30, 30
-for i in range(4):
-    for j in range(4):
-        Card(images[(i * 4) + j - 1], x_l, y_l)
-        x_l += 130
-    x_l = 30
-    y_l += 180
 
 
 player1 = Player("Игрок 1")
@@ -102,6 +90,11 @@ if __name__ == '__main__':
     running = True
     cards = []
     color = (250, 199, 185)
+    pygame.display.set_caption("Рыбное мемо")
+    icon = load_image("icon.png")
+    with open("бд.txt", "r", encoding="utf-8") as menu:
+        menu = menu.readlines()[-1].strip().split()
+        score1, score2 = int(menu[0]), int(menu[1])
 
     f1 = pygame.font.Font(None, 36)
     p1 = f1.render('Игрок 1:', True,
@@ -112,75 +105,204 @@ if __name__ == '__main__':
                    (180, 0, 0))
     c2 = f1.render('0', True,
                    (0, 0, 180))
-    sus = False
+    finish = False
+    start = True
+    hello = f1.render('Привет! Это рыбное мемо - Выбери уровень', True, (100, 0, 0))
+
+    button1 = pygame.Rect(550, 100, 150, 50)
+    button2 = pygame.Rect(550, 200, 150, 50)
+    easy = f1.render('Легкий', True, (100, 0, 0))
+    hard = f1.render('Сложный', True, (100, 0, 0))
+
+    score1_text = f1.render(f'Игрок 1: {score1} побед', True, (100, 0, 0))
+    score2_text = f1.render(f'Игрок 2: {score2} побед', True, (100, 0, 0))
+
+    level_1, level_2 = False, False
+    s = True
+
     print(current_player.name)
 
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            if player1.score + player2.score == 7:
-                if not sus:
-                    cuzya = AnimatedSprite(load_image("molodec.png"), 5, 1, 0, 40)
-                    sus = True
-                if player1.score > player2.score:
-                    final = f1.render('Игрок 1 победил', True, (0, 0, 180))
-                elif player1.score < player2.score:
-                    final = f1.render('Игрок 2 победил!', True, (0, 0, 180))
-                else:
-                    final = f1.render('Ничья', True, (0, 0, 0))
-            if len(cards) == 2:
-                sleep(2)
-                if cards[0].image_name == "rock.png":
-                    current_player.score -= 1
-                    cards[0].kill()
-                if cards[1].image_name == "rock.png":
-                    current_player.score -= 1
-                    cards[1].kill()
-                if cards[0].image_name == "money.png":
-                    current_player.score += 1
-                    cards[0].kill()
-                if cards[1].image_name == "money.png":
-                    current_player.score += 1
-                    cards[1].kill()
-                if cards[0].image_name == cards[1].image_name or \
-                        {cards[0].image_name, cards[1].image_name} == {"arthur_fish.png", "sword.png"}:
-                    cards[0].kill()
-                    cards[1].kill()
-                    current_player.score += 1
-                else:
-                    for card in all_sprites:
-                        if card.is_flipped:
-                            card.flip()
-                    current_player = player1 if current_player == player2 else player2
-                cards = []
-                print("1: " + str(player1.score))
-                print("2: " + str(player2.score))
-                c1 = f1.render(str(player1.score), True,
-                               (180, 0, 0))
-                c2 = f1.render(str(player2.score), True,
-                               (0, 0, 180))
-                print(current_player.name)
-                if current_player == player2:
-                    color = (185, 239, 250)
-                else:
-                    color = (250, 199, 185)
             if event.type == pygame.MOUSEBUTTONDOWN:
-                all_sprites.update(event)
-                pos = pygame.mouse.get_pos()
-                for card in all_sprites:
-                    if card.rect.collidepoint(pos):
-                        cards.append(card)
+                if start:
+                    if button1.collidepoint(event.pos):
+                        start = False  # Красный цвет
+                        level_1 = True
+                    elif button2.collidepoint(event.pos):
+                        start = False  # Голубой цвет
+                        level_2 = True
+
+            if level_1:
+                if s:
+                    images = ["arthur_fish.png", "konok.png", "konok.png", "money.png",
+                              "ne_pila.png", "ne_pila.png", "sguch.png", "sguch.png", "sword.png"]
+
+                    shuffle(images)
+                    x_l, y_l = 30, 30
+                    for i in range(3):
+                        for j in range(3):
+                            Card(images[(i * 3) + j - 1], x_l, y_l)
+                            x_l += 130
+                        x_l = 30
+                        y_l += 180
+                    s = False
+
+                if player1.score + player2.score == 5:
+                    if not finish:
+                        cuzya = AnimatedSprite(load_image("molodec.png"), 5, 1, 0, 40)
+                        finish = True
+                        # добавляем в бд
+                        if player1.score > player2.score:
+                            score1 += 1
+                        elif player1.score < player2.score:
+                            score2 += 1
+
+                    if player1.score > player2.score:
+                        final = f1.render('Игрок 1 победил', True, (0, 0, 180))
+                    elif player1.score < player2.score:
+                        final = f1.render('Игрок 2 победил!', True, (0, 0, 180))
+                    else:
+                        final = f1.render('Ничья', True, (0, 0, 0))
+                if len(cards) == 2:
+                    sleep(2)
+                    if cards[0].image_name == "money.png":
+                        current_player.score += 1
+                        cards[0].kill()
+                    if cards[1].image_name == "money.png":
+                        current_player.score += 1
+                        cards[1].kill()
+                    if cards[0].image_name == cards[1].image_name or \
+                            {cards[0].image_name, cards[1].image_name} == {"arthur_fish.png", "sword.png"}:
+                        cards[0].kill()
+                        cards[1].kill()
+                        current_player.score += 1
+                    else:
+                        for card in all_sprites:
+                            if card.is_flipped:
+                                card.flip()
+                        current_player = player1 if current_player == player2 else player2
+                    cards = []
+                    print("1: " + str(player1.score))
+                    print("2: " + str(player2.score))
+                    c1 = f1.render(str(player1.score), True,
+                                   (180, 0, 0))
+                    c2 = f1.render(str(player2.score), True,
+                                   (0, 0, 180))
+                    print(current_player.name)
+                    if current_player == player2:
+                        color = (185, 239, 250)
+                    else:
+                        color = (250, 199, 185)
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    all_sprites.update(event)
+                    pos = pygame.mouse.get_pos()
+                    for card in all_sprites:
+                        if card.rect.collidepoint(pos):
+                            cards.append(card)
+            elif level_2:
+                if s:
+                    images = ["arthur_fish.png", "igla.png", "igla.png", "konok.png", "konok.png", "money.png",
+                              "ne_pila.png",
+                              "ne_pila.png", "pila.png", "pila.png", "rock.png", "sguch.png", "sguch.png",
+                              "smuch.png", "smuch.png", "sword.png"]
+
+                    shuffle(images)
+                    x_l, y_l = 30, 30
+                    for i in range(4):
+                        for j in range(4):
+                            Card(images[(i * 4) + j - 1], x_l, y_l)
+                            x_l += 130
+                        x_l = 30
+                        y_l += 180
+                    s = False
+
+                if player1.score + player2.score == 7:
+                    if not finish:
+                        cuzya = AnimatedSprite(load_image("molodec.png"), 5, 1, 0, 40)
+                        finish = True
+                        # добавляем в бд
+                        if player1.score > player2.score:
+                            score1 += 1
+                        elif player1.score < player2.score:
+                            score2 += 1
+
+                    if player1.score > player2.score:
+                        final = f1.render('Игрок 1 победил', True, (0, 0, 180))
+                    elif player1.score < player2.score:
+                        final = f1.render('Игрок 2 победил!', True, (0, 0, 180))
+                    else:
+                        final = f1.render('Ничья', True, (0, 0, 0))
+                if len(cards) == 2:
+                    sleep(2)
+                    if cards[0].image_name == "rock.png":
+                        current_player.score -= 1
+                        cards[0].kill()
+                    if cards[1].image_name == "rock.png":
+                        current_player.score -= 1
+                        cards[1].kill()
+                    if cards[0].image_name == "money.png":
+                        current_player.score += 1
+                        cards[0].kill()
+                    if cards[1].image_name == "money.png":
+                        current_player.score += 1
+                        cards[1].kill()
+                    if cards[0].image_name == cards[1].image_name or \
+                            {cards[0].image_name, cards[1].image_name} == {"arthur_fish.png", "sword.png"}:
+                        cards[0].kill()
+                        cards[1].kill()
+                        current_player.score += 1
+                    else:
+                        for card in all_sprites:
+                            if card.is_flipped:
+                                card.flip()
+                        current_player = player1 if current_player == player2 else player2
+                    cards = []
+                    print("1: " + str(player1.score))
+                    print("2: " + str(player2.score))
+                    c1 = f1.render(str(player1.score), True,
+                                   (180, 0, 0))
+                    c2 = f1.render(str(player2.score), True,
+                                   (0, 0, 180))
+                    print(current_player.name)
+                    if current_player == player2:
+                        color = (185, 239, 250)
+                    else:
+                        color = (250, 199, 185)
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    all_sprites.update(event)
+                    pos = pygame.mouse.get_pos()
+                    for card in all_sprites:
+                        if card.rect.collidepoint(pos):
+                            cards.append(card)
+
 
         screen.fill(color)
-        if sus:
+        if finish:
             cuzya.update()
             screen.blit(final, (10, 10))
-        screen.blit(p1, (550, 100))
-        screen.blit(p2, (550, 200))
-        screen.blit(c1, (670, 100))
-        screen.blit(c2, (670, 200))
-        all_sprites.draw(screen)
+        if start:
+            screen.fill((240, 208, 93))
+            screen.blit(hello, (20, 20))
+            pygame.draw.rect(screen, (255, 130, 130), button1)
+            pygame.draw.rect(screen, (200, 40, 40), button2)
+
+            screen.blit(easy, (550, 70))
+            screen.blit(hard, (550, 170))
+            screen.blit(icon, (20, 60, 450, 450))
+
+            screen.blit(score1_text, (50, 550))
+            screen.blit(score2_text, (50, 600))
+        else:
+            screen.blit(p1, (550, 100))
+            screen.blit(p2, (550, 200))
+            screen.blit(c1, (670, 100))
+            screen.blit(c2, (670, 200))
+            all_sprites.draw(screen)
         pygame.display.flip()
         pygame.display.update()
+    with open("бд.txt", "w", encoding="utf-8") as menu:
+        print(f"{score1} {score2}", file=menu)
     pygame.quit()

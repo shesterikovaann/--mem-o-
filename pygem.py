@@ -9,7 +9,7 @@ class Card(pygame.sprite.Sprite):
 
     back_im = pygame.image.load("data/card_back.png")
 
-    def __init__(self, img, x, y):
+    def __init__(self, img: str, x: int, y: int):
         super().__init__(all_sprites)
         self.front = load_image(img)
         self.back = Card.back_im
@@ -49,7 +49,8 @@ class AnimatedSprite(pygame.sprite.Sprite):
         self.image = self.frames[self.cur_frame]
         self.rect = self.rect.move(x, y)
 
-    def cut_sheet(self, sheet, columns, rows):
+    def cut_sheet(self, sheet, columns: int, rows: int):
+        # обрезаем и нарезку делаем
         self.rect = pygame.Rect(0, 0, 5422 // columns,
                                 830 // rows)
         for j in range(rows):
@@ -59,11 +60,12 @@ class AnimatedSprite(pygame.sprite.Sprite):
                     frame_location, self.rect.size)))
 
     def update(self):
+        # обновление картинки
         self.cur_frame = (self.cur_frame + 1) % len(self.frames)
         self.image = self.frames[self.cur_frame]
 
 
-def load_image(name):
+def load_image(name: str):  # загрузка картинки
     fullname = os.path.join('data', name)
     # если файл не существует, то выходим
     if not os.path.isfile(fullname):
@@ -72,12 +74,10 @@ def load_image(name):
     image = pygame.image.load(fullname)
     return image
 
-
+# группа спрайтов
 all_sprites = pygame.sprite.Group()
 
-# Создание списка карточек
-
-
+# игроки
 player1 = Player("Игрок 1")
 player2 = Player("Игрок 2")
 current_player = player1
@@ -89,13 +89,16 @@ if __name__ == '__main__':
     screen = pygame.display.set_mode(size)
     running = True
     cards = []
+    # фон
     color = (250, 199, 185)
     pygame.display.set_caption("Рыбное мемо")
     icon = load_image("icon.png")
+    # открываем бд
     with open("бд.txt", "r", encoding="utf-8") as menu:
         menu = menu.readlines()[-1].strip().split()
         score1, score2 = int(menu[0]), int(menu[1])
 
+    # задаём тексты
     f1 = pygame.font.Font(None, 36)
     p1 = f1.render('Игрок 1:', True,
                       (180, 0, 0))
@@ -105,10 +108,11 @@ if __name__ == '__main__':
                    (180, 0, 0))
     c2 = f1.render('0', True,
                    (0, 0, 180))
+    # для окон
     finish = False
     start = True
     hello = f1.render('Привет! Это рыбное мемо - Выбери уровень', True, (100, 0, 0))
-
+    # кнопки уровней
     button1 = pygame.Rect(550, 100, 150, 50)
     button2 = pygame.Rect(550, 200, 150, 50)
     easy = f1.render('Легкий', True, (100, 0, 0))
@@ -118,8 +122,9 @@ if __name__ == '__main__':
     score2_text = f1.render(f'Игрок 2: {score2} побед', True, (100, 0, 0))
 
     level_1, level_2 = False, False
+    # чтобы включить уровень
     s = True
-
+    # дебаг
     print(current_player.name)
 
     while running:
@@ -127,19 +132,21 @@ if __name__ == '__main__':
             if event.type == pygame.QUIT:
                 running = False
             if event.type == pygame.MOUSEBUTTONDOWN:
+                # выбор уровня
                 if start:
                     if button1.collidepoint(event.pos):
-                        start = False  # Красный цвет
+                        start = False
                         level_1 = True
                     elif button2.collidepoint(event.pos):
-                        start = False  # Голубой цвет
+                        start = False
                         level_2 = True
 
-            if level_1:
+            if level_1:  # лёгкий уровень
                 if s:
                     images = ["arthur_fish.png", "konok.png", "konok.png", "money.png",
                               "ne_pila.png", "ne_pila.png", "sguch.png", "sguch.png", "sword.png"]
 
+                    # добавляем спрайты в группу
                     shuffle(images)
                     x_l, y_l = 30, 30
                     for i in range(3):
@@ -149,7 +156,7 @@ if __name__ == '__main__':
                         x_l = 30
                         y_l += 180
                     s = False
-
+                # проверка для финиша
                 if player1.score + player2.score == 5:
                     if not finish:
                         cuzya = AnimatedSprite(load_image("molodec.png"), 5, 1, 0, 40)
@@ -166,6 +173,8 @@ if __name__ == '__main__':
                         final = f1.render('Игрок 2 победил!', True, (0, 0, 180))
                     else:
                         final = f1.render('Ничья', True, (0, 0, 0))
+
+                # гадание на картах
                 if len(cards) == 2:
                     sleep(2)
                     if cards[0].image_name == "money.png":
@@ -187,6 +196,7 @@ if __name__ == '__main__':
                     cards = []
                     print("1: " + str(player1.score))
                     print("2: " + str(player2.score))
+                    # счёт
                     c1 = f1.render(str(player1.score), True,
                                    (180, 0, 0))
                     c2 = f1.render(str(player2.score), True,
@@ -196,19 +206,20 @@ if __name__ == '__main__':
                         color = (185, 239, 250)
                     else:
                         color = (250, 199, 185)
+                # обновочка
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     all_sprites.update(event)
                     pos = pygame.mouse.get_pos()
                     for card in all_sprites:
                         if card.rect.collidepoint(pos):
                             cards.append(card)
-            elif level_2:
+            elif level_2:  # сложный уровень
                 if s:
                     images = ["arthur_fish.png", "igla.png", "igla.png", "konok.png", "konok.png", "money.png",
                               "ne_pila.png",
                               "ne_pila.png", "pila.png", "pila.png", "rock.png", "sguch.png", "sguch.png",
                               "smuch.png", "smuch.png", "sword.png"]
-
+                    # создаём группу спрайтов
                     shuffle(images)
                     x_l, y_l = 30, 30
                     for i in range(4):
@@ -219,7 +230,7 @@ if __name__ == '__main__':
                         y_l += 180
                     s = False
 
-                if player1.score + player2.score == 7:
+                if player1.score + player2.score == 7:  # финал
                     if not finish:
                         cuzya = AnimatedSprite(load_image("molodec.png"), 5, 1, 0, 40)
                         finish = True
@@ -235,6 +246,8 @@ if __name__ == '__main__':
                         final = f1.render('Игрок 2 победил!', True, (0, 0, 180))
                     else:
                         final = f1.render('Ничья', True, (0, 0, 0))
+
+                # шуры муры с картами
                 if len(cards) == 2:
                     sleep(2)
                     if cards[0].image_name == "rock.png":
@@ -271,14 +284,15 @@ if __name__ == '__main__':
                         color = (185, 239, 250)
                     else:
                         color = (250, 199, 185)
+
+                # обновление
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     all_sprites.update(event)
                     pos = pygame.mouse.get_pos()
                     for card in all_sprites:
                         if card.rect.collidepoint(pos):
                             cards.append(card)
-
-
+        # цвет
         screen.fill(color)
         if finish:
             cuzya.update()
@@ -295,7 +309,7 @@ if __name__ == '__main__':
 
             screen.blit(score1_text, (50, 550))
             screen.blit(score2_text, (50, 600))
-        else:
+        else:  # основная игра
             screen.blit(p1, (550, 100))
             screen.blit(p2, (550, 200))
             screen.blit(c1, (670, 100))
@@ -303,6 +317,8 @@ if __name__ == '__main__':
             all_sprites.draw(screen)
         pygame.display.flip()
         pygame.display.update()
+
+    # добавляем результат в бд
     with open("бд.txt", "w", encoding="utf-8") as menu:
         print(f"{score1} {score2}", file=menu)
     pygame.quit()
